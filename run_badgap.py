@@ -1,4 +1,4 @@
-"""Shared dataset, normalization, and plotting helpers for run_bandgap_v1.py."""
+"""Shared dataset, normalization, and plotting helpers for run_bandgap.py."""
 
 from pathlib import Path
 import random
@@ -163,4 +163,4 @@ def plot_test_prediction_grid(prediction: dict, output_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    raise SystemExit("This module contains shared helpers. Train with run_bandgap_v1.py.")
+    raise SystemExit("This module contains shared helpers. Train with run_bandgap.py.")

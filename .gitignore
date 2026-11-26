@@ -8,7 +8,7 @@ __pycache__/
 /200/
 /300/
 /low_temp_v3_1005/
-/result_bandgap_v1/
+/result_bandgap/
 /predictions/
 *.pth
 OUTCAR

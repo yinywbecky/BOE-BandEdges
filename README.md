@@ -13,7 +13,7 @@ CBM, and energy. The band gap is computed as `CBM - VBM`.
 - **Use a trained model:** install dependencies, obtain a compatible model bundle,
   and follow [Trajectory prediction](#trajectory-prediction).
 - **Train or reproduce the workflow:** start with [Prepare input data](#prepare-input-data),
-  then generate descriptors and datasets and run the v1 trainer.
+  then generate descriptors and datasets and run the trainer.
 
 Training trajectories and validated pretrained weights are not included.
 Source code for this related force-field/MD workflow is maintained separately in
@@ -44,17 +44,17 @@ force and total-energy extraction scripts.
 | Stage | Code / resources |
 | --- | --- |
 | Extract all force and energy frames | [ext_force.sh](ext_force.sh), [ext_energy.sh](ext_energy.sh) |
-| Select frames | [plot_hist_v2.py](plot_hist_v2.py) |
+| Select frames | [plot_hist.py](plot_hist.py) |
 | Generate BOE descriptors | [boe_cashe.py](boe_cashe.py), [gen_center_all_data.py](gen_center_all_data.py) |
 | Align labels and split datasets | [gen_force_all_data.py](gen_force_all_data.py), [gen_force.py](gen_force.py) |
-| Train the selected v1 model | [run_bandgap_v1.py](run_bandgap_v1.py), [model_badgap_v1.py](model_badgap_v1.py) |
+| Train the selected model | [run_bandgap.py](run_bandgap.py), [model_badgap.py](model_badgap.py) |
 | Dataset, normalization, plotting helpers | [run_badgap.py](run_badgap.py) |
-| Predict electronic properties from XYZ | [predict_badgap_from_traj_v1.py](predict_badgap_from_traj_v1.py) |
+| Predict electronic properties from XYZ | [predict_badgap_from_traj.py](predict_badgap_from_traj.py) |
 | Reference and force-pair indexing | [POSCAR_REV.vasp](POSCAR_REV.vasp), [data1](data1), [data2](data2) |
 
 `run_badgap.py` is a helper module, not an alternative training entrypoint in
 this repository. Historical `badgap` filenames are retained for consistency.
-Force columns are preserved in the input format, but the v1 loss trains only
+Force columns are preserved in the input format, but the training loss uses only
 VBM, CBM, and total energy; it does not train a force field.
 
 ## Prepare input data
@@ -101,12 +101,12 @@ settings or licensed pseudopotentials.
 Run from the repository root:
 
 ```powershell
-python plot_hist_v2.py
+python plot_hist.py
 python gen_center_all_data.py
 python gen_force_all_data.py
 ```
 
-Defaults preserve the selected v1 data setup:
+Defaults preserve the selected data setup:
 
 | Parameter | Value |
 | --- | --- |
@@ -131,7 +131,7 @@ whose index or split conventions differ.
 ## Train and evaluate
 
 ```powershell
-python run_bandgap_v1.py --hidden-dim 64 --epochs 80 --device cpu
+python run_bandgap.py --hidden-dim 64 --epochs 80 --device cpu
 ```
 
 Use `--help` for dataset paths, output directory, loss weights, and other options.
@@ -140,17 +140,17 @@ Only the validation split is used for checkpoint selection. The selection
 criterion preserves the model's sum of VBM, CBM, and total-energy RMSE in eV.
 The test split is evaluated after checkpoint selection.
 
-Results go to `result_bandgap_v1`. The main weight files contain the
+Results go to `result_bandgap`. The main weight files contain the
 validation-composite-best model, matching the reported final evaluation.
 Keep these files together as a portable inference bundle:
 
 ```text
-result_bandgap_v1/
-    model1_badgap_v1.pth
-    model2_badgap_v1.pth
+result_bandgap/
+    model1_badgap.pth
+    model2_badgap.pth
     feature_normalization.npz
     reference.vasp
-    summary_badgap_v1.json
+    summary_badgap.json
 ```
 
 Normalization is fitted only on training features/targets. The bundle stores
@@ -167,7 +167,7 @@ in the summary.
 With a bundle from this trainer and an XYZ trajectory:
 
 ```powershell
-python predict_badgap_from_traj_v1.py --model-dir result_bandgap_v1 --trajectory path\to\traj.xyz --output predictions --start 0 --stride 1 --device cpu
+python predict_badgap_from_traj.py --model-dir result_bandgap --trajectory path\to\traj.xyz --output predictions --start 0 --stride 1 --device cpu
 ```
 
 The trajectory must have the same atom count, species, and physical atom order
@@ -187,7 +187,7 @@ integration step or physical time. Total energy includes restoration of its
 training mean offset. VBM/CBM share the energy reference used in their training
 labels; the code does not establish an absolute vacuum reference.
 
-The v1 three-output checkpoints are not interchangeable with older nine-output
+The current three-output checkpoints are not interchangeable with older nine-output
 force/eigenvalue networks. Use only trusted model files and their matching
 normalization and reference resources.
 

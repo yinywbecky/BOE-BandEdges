@@ -14,13 +14,13 @@ from pymatgen.core import Structure
 
 import gen_center_all_data as centers
 import gen_force_all_data as generation
-import plot_hist_v2 as sampling
-from model_badgap_v1 import DualBadGapModelContainer
-from predict_badgap_from_traj_v1 import (
+import plot_hist as sampling
+from model_badgap import DualBadGapModelContainer
+from predict_badgap_from_traj import (
     load_normalization, parse_xyz_frames, predict_trajectory, select_step_indices,
 )
 from run_badgap import FORCE_COLUMNS, convert_metrics_units, make_split_loaders
-from run_bandgap_v1 import train
+from run_bandgap import train
 
 
 ROOT = Path(__file__).resolve().parents[1]
