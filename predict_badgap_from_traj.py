@@ -11,7 +11,7 @@ import torch
 from pymatgen.core import Structure
 
 from boe_cashe import BPProcessor, get_centers
-from model_badgap_v1 import DualBadGapModelContainer, SubNet
+from model_badgap import DualBadGapModelContainer, SubNet
 
 
 def parse_xyz_frames(xyz_path: Path) -> tuple[list[str], list[np.ndarray]]:
@@ -96,9 +96,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def predict_trajectory(args: argparse.Namespace) -> pd.DataFrame:
-    summary = json.loads((args.model_dir / "summary_badgap_v1.json").read_text(encoding="utf-8"))
-    if summary["model_module"] != "model_badgap_v1.py" or summary["model_output_dim"] != 3:
-        raise ValueError("Expected a three-output model_badgap_v1 model bundle.")
+    summary = json.loads((args.model_dir / "summary_badgap.json").read_text(encoding="utf-8"))
+    if summary["model_module"] != "model_badgap.py" or summary["model_output_dim"] != 3:
+        raise ValueError("Expected a three-output model_badgap model bundle.")
     n_col = int(summary["input_dim"])
     means1, std1, means2, std2 = load_normalization(
         args.model_dir / summary["feature_normalization"], n_col

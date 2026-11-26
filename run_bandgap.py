@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from boe_cashe import BPProcessor
-from model_badgap_v1 import DualBadGapModelContainer, SubNet
+from model_badgap import DualBadGapModelContainer, SubNet
 from run_badgap import (
     ATOM_NUM, LABEL_COLUMNS, VEFeaturesBadgapDataset, convert_metrics_units, make_split_loaders,
     plot_test_prediction_grid, set_seed,
@@ -24,7 +24,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Train dual BOE models for VBM, CBM, and total energy.")
     parser.add_argument("--dataset-path1", type=Path, default=BASE_DIR / "low_temp_v3_1005" / "dataset1" / "dataset_normal")
     parser.add_argument("--dataset-path2", type=Path, default=BASE_DIR / "low_temp_v3_1005" / "dataset2" / "dataset_normal")
-    parser.add_argument("--result-root", type=Path, default=BASE_DIR / "result_bandgap_v1")
+    parser.add_argument("--result-root", type=Path, default=BASE_DIR / "result_bandgap")
     parser.add_argument("--ref-poscar", type=Path, default=BASE_DIR / "POSCAR_REV.vasp")
     parser.add_argument("--input-dim", type=int, choices=(30, 42), default=42)
     parser.add_argument("--hidden-dim", type=int, default=64)
@@ -67,8 +67,8 @@ def train(args: argparse.Namespace) -> dict:
         SubNet(args.input_dim, 3, args.hidden_dim), device=args.device,
     )
     args.result_root.mkdir(parents=True, exist_ok=True)
-    model1_path = args.result_root / "model1_badgap_v1.pth"
-    model2_path = args.result_root / "model2_badgap_v1.pth"
+    model1_path = args.result_root / "model1_badgap.pth"
+    model2_path = args.result_root / "model2_badgap.pth"
     history, best_states = model.fit(
         train1, train2, epochs=args.epochs, lr=args.lr,
         vbm_weight=args.vbm_weight, cbm_weight=args.cbm_weight, energy_weight=args.energy_weight,
@@ -79,7 +79,7 @@ def train(args: argparse.Namespace) -> dict:
     composite2 = model2_path.with_stem(f"{model2_path.stem}_composite_best")
     model.load(str(composite1), str(composite2))
     model.save(str(model1_path), str(model2_path))
-    pd.DataFrame(history).to_csv(args.result_root / "history_badgap_v1.csv", index=False)
+    pd.DataFrame(history).to_csv(args.result_root / "history_badgap.csv", index=False)
 
     metrics_raw = {}
     for split, first, second in (("train", train1, train2), ("val", val1, val2), ("test", test1, test2)):
@@ -99,7 +99,7 @@ def train(args: argparse.Namespace) -> dict:
     if args.ref_poscar.resolve() != reference_path.resolve():
         shutil.copyfile(args.ref_poscar, reference_path)
     summary = {
-        "model_module": "model_badgap_v1.py", "model_output_dim": 3,
+        "model_module": "model_badgap.py", "model_output_dim": 3,
         "input_dim": args.input_dim, "hidden_dim": args.hidden_dim,
         "epochs": args.epochs, "batch_size": args.batch_size, "learning_rate": args.lr,
         "seed": args.seed, "atom_num": ATOM_NUM, "boes_per_mode": 20,
@@ -125,7 +125,7 @@ def train(args: argparse.Namespace) -> dict:
             "best_epoch": best_states["composite"]["epoch"],
         },
     }
-    (args.result_root / "summary_badgap_v1.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    (args.result_root / "summary_badgap.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(f"Saved model bundle and evaluation to {args.result_root}")
     return summary
 
